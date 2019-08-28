@@ -1,34 +1,20 @@
 from sqlalchemy import (
-    create_engine, Table, String, Integer, MetaData, Column ,DateTime, )
+    create_engine, Table, String, Integer, MetaData, Column ,DateTime,ForeignKey )
 from sqlalchemy.orm import mapper
-from database import database_metadata
-import hashlib
+from database import Base
+from datetime import datetime
+from sqlalchemy.orm import relationship
+from auth.models import User
 
 
 
-
-
-
-engine = create_engine('sqlite:///echomodels.db')
-
-
-echo_controller_table = Table (
-    'echo_table', database_metadata,
-    Column('id', Integer, primary_key=True),
-    Column('content', String),
-    Column('user', Integer),
-    Column('created', DateTime),
-
-)
-database_metadata.create_all(engine)
-
-class Echo:
-    def __init__(self, content, user, date):
-        self.content = content
-        self.user = user
-        self.date = date
-mapper(Echo, echo_controller_table)
-
+class Message(Base):
+    __tablename__= 'Messages'
+    id = Column(Integer, primary_key= True , autoincrement=True)
+    data = Column(String, nullable=True)
+    created = Column(DateTime, default= datetime.now())
+    user_id = Column(Integer, ForeignKey('users.id'))
+    user = relationship('User', back_populates='messages')
 
 
 
