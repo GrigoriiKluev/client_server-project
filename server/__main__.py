@@ -7,12 +7,16 @@ from socket import socket
 import yaml
 from handlers import handle_default_request
 
+from database import Base, engine
+from settings import INSTALLED_MODULES, BASE_DIR
+import os
 parser = ArgumentParser()
 parser.add_argument(
     '-c', '--config', type=str,
     required=False, help='Sets config file path'
 )
 
+parser.add_argument('-m','--migrate', action ='store_true')
 args = parser.parse_args()
 
 default_config = {'host': 'localhost',
@@ -24,6 +28,8 @@ if args.config:
     with open(args.config) as file:
         config = yaml.load(file, Loader=yaml.Loader)
         default_config.update(default_config)
+
+
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -70,12 +76,15 @@ class Server:
             while True:
                 try:
                     client, address = sock.accept()
+               
+
 
                     self._connections.append(client)
 
                     logging.info(
                         'client was connected with {}:{} | Connections: {}'.format(address[0], address[1],
                                                                                    self._connections))
+
                 except:
                     pass
                 try:
@@ -101,6 +110,15 @@ class Server:
             logging.info('server shutdown')
 
 
-if __name__ == '__main__':
-    server = Server(default_config.get('host'), default_config.get('port'), default_config.get('buffersize'))
-    server.run()
+if args.migrate:
+
+    module_name_list = [f'{item}.models' for item in INSTALLED_MODULES]
+    module_path_list = (os.path.join(BASE_DIR, item, 'models.py') for item in INSTALLED_MODULES)
+    for index, path in enumerate(module_path_list):
+        if os.path.exists(path):
+            __import__(module_name_list[index])
+    Base.metadata.create_all()
+else:
+    if __name__ == '__main__':
+        server = Server(default_config.get('host'), default_config.get('port'), default_config.get('buffersize'))
+        server.run()
