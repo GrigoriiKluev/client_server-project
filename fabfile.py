@@ -15,3 +15,6 @@ def notebook():
 
 def kill():
     local('lsof -t -i tcp:8000 | xargs kill')
+
+def migrate():
+    local('python server -m')
