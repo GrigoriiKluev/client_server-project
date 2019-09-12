@@ -11,18 +11,33 @@ class Application:
         self._handler = handler
         self._buffersize = buffersize
 
-        self._sock = socket()
+        self._sock = None
         self._requests = list()
         self._connections = list()
 
+    def __enter__(self):
+        if not self._sock:
+            self._sock = socket()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        message = 'Server shutdown'
+        if exc_type:
+            if not exc_type is KeyboardInterrupt:
+                message = 'Server stopped with error'
+        logging.info(message, exc_info=exc_val)
+        return True
+
     def bind(self, backlog=5):
+        if not self._sock:
+            self._sock = socket()
         self._sock.bind((self._host, self._port,))
         self._sock.settimeout(0)
         self._sock.listen(backlog)
 
     def accept(self):
         try:
-            client, address = self._sock.accept()
+            client, address = self._sock.accept()    
         except Exception:
             pass
         else:
@@ -45,10 +60,10 @@ class Application:
             self._connections.remove(sock)
 
     def run(self):
-        try:
-            logging.info(f'Server was started with {self._host}:{self._port}')
+        logging.info(f'Server was started with {self._host}:{self._port}')
 
-            while True:
+        while True:
+            try:
                 self.accept()
 
                 rlist, wlist, xlist = select.select(
@@ -70,9 +85,8 @@ class Application:
                             target=self.write, args=(w_client, b_response)
                         )
                         w_thread.start()
-        except KeyboardInterrupt:
-            logging.info('Server shutdown')
-
+            except OSError:
+                pass
 
 class CustomApplication(Application):
     def read(self, sock):

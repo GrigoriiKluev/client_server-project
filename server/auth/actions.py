@@ -1,5 +1,8 @@
-from .controllers import Users
+from .controllers import login_controller, registration_controller, logout_controller
 
 
-actions = [{'action':'create user', 'controller': Users.create_user}
-           ]
+actionnames = [
+    {'action':'login', 'controller':login_controller},
+    {'action':'registrate', 'controller':registration_controller},
+    {'action':'logout', 'controller':logout_controller},
+]

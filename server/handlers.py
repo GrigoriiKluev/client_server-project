@@ -1,10 +1,12 @@
 import json
 import logging
-from middlewares import (compression_middleware, encryption_middleware)
+
 from resolvers import resolve
-from protocol import(
-validate_request, make_response
-)
+from middlewares import compression_middleware
+from security.middlewares import encryption_middleware
+from protocol import validate_request, make_response
+
+
 @compression_middleware
 @encryption_middleware
 def handle_default_request(raw_request):
@@ -22,10 +24,10 @@ def handle_default_request(raw_request):
                 response = make_response(request, 500, 'Internal server error')
         else:
             logging.error(f'Controller {action_name} not found')
-
             response = make_response(request, 404, f'Action with name {action_name} not supported')
     else:
         logging.error(f'Controller wrong request: {request}')
         response = make_response(request, 400, 'wrong request format')
 
     return json.dumps(response).encode()
+
